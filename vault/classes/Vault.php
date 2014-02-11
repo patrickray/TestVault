@@ -15,7 +15,7 @@ class Vault {
     }
     
     public $settings = array();
-
+    
     public $sites;
     public $values = array();
     public $cache_file_location = 'vault/cache';
@@ -27,27 +27,31 @@ class Vault {
     public function setSites($array) {
             $this->sites = $array;
     }
-
+    
     public function setSettings() {
-            $this->settings['cache_time'] = CACHE_TIME;
+        $this->settings['cache_time'] = CACHE_TIME;
+        $this->Log->LogInfo("Cache time is set to " . CACHE_TIME . ' minutes');
     }
     
     public function getFiles() {
-            $cache_file_timestamp = ((file_exists($this->cache_file_location . '/' . SITE . '.txt'))) ? filemtime($this->cache_file_location . '/' . SITE . '.txt') : 0;
-
-            if (time() - ($this->settings['cache_time'] * 60) > $cache_file_timestamp) {
-                    //Get Master file
-                    $file_location = VAULT_URL . SITE_GROUP;			
-                    $this->saveFileToCache($file_location . '/' . SITE_GROUP . '.txt');
-
-                    //Get Site file
-                    $file_location = VAULT_URL . SITE_GROUP . '/' . SITE;			
-                    $this->saveFileToCache($file_location . '/' . SITE . '.txt');
-            }
+        $cache_file_timestamp = ((file_exists($this->cache_file_location . '/' . SITE . '.txt'))) ? filemtime($this->cache_file_location . '/' . SITE . '.txt') : 0;
+        $this->Log->LogInfo("Cache file " . $this->cache_file_location . '/' . SITE . '.txt is ' . (time() - $cache_file_timestamp) / 60 . ' minutes old');
+        
+        if (time() - ($this->settings['cache_time'] * 60) > $cache_file_timestamp) {
+            //Get Master file
+            $this->Log->LogInfo('Getting new master file');
+            $file_location = VAULT_URL . SITE_GROUP;			
+            $this->saveFileToCache($file_location . '/' . SITE_GROUP . '.txt');
+            
+            //Get Site file
+            $this->Log->LogInfo('Getting new site file');
+            $file_location = VAULT_URL . SITE_GROUP . '/' . SITE;			
+            $this->saveFileToCache($file_location . '/' . SITE . '.txt');
+        }
     }
 
     public function createFolder($folder) {
-            mkdir('vault/cache/' . $folder);
+        mkdir('vault/cache/' . $folder);
     }
     
     public function saveFileToCache($url) {        
@@ -86,30 +90,30 @@ class Vault {
     }
 
     public function setLocalValues() {
-            $local_values = ((file_exists($this->local_values_file))) ? file_get_contents($this->local_values_file) : 0;
-            if($this->isJson($local_values)) {
-                    $key_value_array = array_shift(json_decode($local_values, true));
-                    foreach($key_value_array as $key => $value) {
-                            $this->values[$key] = $value;
-                    }	
-            }
+        $local_values = ((file_exists($this->local_values_file))) ? file_get_contents($this->local_values_file) : 0;
+        if($this->isJson($local_values)) {
+            $key_value_array = array_shift(json_decode($local_values, true));
+            foreach($key_value_array as $key => $value) {
+                $this->values[$key] = $value;
+            }	
+        }
     }
 
     public function show($key) {
-            if(!isset($this->values[$key])) {
-                    $this->showError('Value: "'.$key.'" not set');
-            } else {
-                    echo $this->values[$key];	
-            }
+        if(!isset($this->values[$key])) {
+            $this->showError('Value: "'.$key.'" not set');
+        } else {
+            echo $this->values[$key];	
+        }
     }
 
     public function isJson($string) {
-            json_decode($string);
-            return (json_last_error() == JSON_ERROR_NONE);
+        json_decode($string);
+        return (json_last_error() == JSON_ERROR_NONE);
     }
 
     public function showError($message) {
-            echo '<span style="background: #F00;">' . $message . '</span>';
+        echo '<span style="background: #F00;">' . $message . '</span>';
     }
 	
 }
