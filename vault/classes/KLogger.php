@@ -104,7 +104,7 @@
 		
 		public function Log($line, $priority)
 		{
-			if ( $this->priority <= $priority )
+			if ( $this->priority <= $priority && LOGGING_ENABLED == true)
 			{
 				$status = $this->getTimeLine( $priority );
 				$this->WriteFreeFormLine ( "$status $line \n" );

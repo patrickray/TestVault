@@ -35,7 +35,7 @@ class Vault {
     
     public function getFiles() {
         $cache_file_timestamp = ((file_exists($this->cache_file_location . '/' . SITE . '.txt'))) ? filemtime($this->cache_file_location . '/' . SITE . '.txt') : 0;
-        $this->Log->LogInfo("Cache file " . $this->cache_file_location . '/' . SITE . '.txt is ' . (time() - $cache_file_timestamp) / 60 . ' minutes old');
+        $this->Log->LogInfo("Cache file " . $this->cache_file_location . '/' . SITE . '.txt is ' . number_format(time() - $cache_file_timestamp) / 60 . ' minutes old', 2);
         
         if (time() - ($this->settings['cache_time'] * 60) > $cache_file_timestamp) {
             //Get Master file
