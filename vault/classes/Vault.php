@@ -3,14 +3,17 @@ class Vault {
     
     public $Log;
     
-    public function __construct() {
+    public function __construct($vault_files) {
         $this->Log = new KLogger ( "log.txt" , KLogger::DEBUG );
         $this->Log->LogInfo("Logging started");
+        
+        $this->vault_files = $vault_files;
         
         $this->setSettings();
         $this->getFiles();
         $this->parseCacheFiles();
         $this->setLocalValues();
+        
         
     }
     
@@ -21,7 +24,7 @@ class Vault {
     public $cache_file_location = 'vault/cache';
     public $local_values_file = 'vault/local/local.txt';
     public $log_file = 'vault/log.txt';
-    
+    public $vault_files = array();    
     
 
     public function setSites($array) {
@@ -33,23 +36,21 @@ class Vault {
         $this->Log->LogInfo("Cache time is set to " . CACHE_TIME . ' minutes');
     }
     
-    public function getFiles() {
-        $cache_file_timestamp = ((file_exists($this->cache_file_location . '/' . SITE . '.txt'))) ? filemtime($this->cache_file_location . '/' . SITE . '.txt') : 0;
-        $this->Log->LogInfo("Cache file " . $this->cache_file_location . '/' . SITE . '.txt is ' . number_format(time() - $cache_file_timestamp) / 60 . ' minutes old', 2);
-        
-        if (time() - ($this->settings['cache_time'] * 60) > $cache_file_timestamp) {
-            //Get Master file
-            $this->Log->LogInfo('Getting new master file');
-            $file_location = VAULT_URL . SITE_GROUP;			
-            $this->saveFileToCache($file_location . '/' . SITE_GROUP . '.txt');
+    public function getFiles() {        
+        foreach($this->vault_files as $vault_files_key => $vault_file) {
+            $temp_file = basename($vault_file);
+            $cache_file_timestamp = ((file_exists($this->cache_file_location . '/' . $temp_file))) ? filemtime($this->cache_file_location . '/' . $temp_file) : 0;
+            $this->Log->LogInfo("Cache file " . $this->cache_file_location . '/' . $temp_file . ' is ' . number_format(time() - $cache_file_timestamp) / 60 . ' minutes old', 2);
             
-            //Get Site file
-            $this->Log->LogInfo('Getting new site file');
-            $file_location = VAULT_URL . SITE_GROUP . '/' . SITE;			
-            $this->saveFileToCache($file_location . '/' . SITE . '.txt');
-        }
+            if (time() - ($this->settings['cache_time'] * 60) > $cache_file_timestamp) {
+                //Get the file
+                $this->Log->LogInfo('Getting file: ' . VAULT_URL . $vault_file);
+                $file_location = VAULT_URL . $vault_file;			
+                $this->saveFileToCache($file_location);
+            }
+        }        
     }
-
+    
     public function createFolder($folder) {
         mkdir('vault/cache/' . $folder);
     }
@@ -68,17 +69,11 @@ class Vault {
     }
 
     public function parseCacheFiles() {
-        $master_file = $this->cache_file_location . '/' . SITE_GROUP . '.txt';
-        if(file_exists($master_file)) {
-                $this->setKeysValues($master_file);
+        foreach (glob($this->cache_file_location . "/*") as $filename) {        
+            $this->setKeysValues($filename);
         }
-        $site_file = $this->cache_file_location . '/' . SITE . '.txt';
-        if(file_exists($site_file)) {
-                $this->setKeysValues($site_file);
-        }
-
     }
-
+    
     public function setKeysValues($file) {
         $contents = file_get_contents($file);
         if($this->isJson($contents)) {
