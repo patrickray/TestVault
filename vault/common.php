@@ -4,6 +4,4 @@ require_once(dirname(__FILE__) . '/classes/KLogger.php');
 require_once(dirname(__FILE__) . '/classes/Vault.php');
 
 
-$Vault = new Vault();
-
-
+$Vault = new Vault($vault_files);
