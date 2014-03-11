@@ -10,6 +10,7 @@ class Vault {
         $this->vault_files = $vault_files;
         
         $this->setSettings();
+        $this->createCacheFolder();
         $this->getFiles();
         $this->parseCacheFiles();
         $this->setLocalValues();
@@ -28,7 +29,18 @@ class Vault {
     
 
     public function setSites($array) {
-            $this->sites = $array;
+        $this->sites = $array;
+    }
+    
+    public function createCacheFolder() {
+        if(!file_exists($this->cache_file_location)) {
+            $this->Log->LogInfo("Cache folder doesn't exists, attempting to create folder at " . $this->cache_file_location);
+            if(mkdir($this->cache_file_location)) {
+                $this->Log->LogInfo("Cache folder created at " . $this->cache_file_location);
+            } else {
+                $this->Log->LogInfo("Cache folder could not be created, check permissions");
+            }
+        }
     }
     
     public function setSettings() {
@@ -50,11 +62,7 @@ class Vault {
             }
         }        
     }
-    
-    public function createFolder($folder) {
-        mkdir('vault/cache/' . $folder);
-    }
-    
+        
     public function saveFileToCache($url) {        
         $contents = file_get_contents($url);
         if($this->isJson($contents)) {
